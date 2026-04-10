@@ -2,68 +2,191 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Informacyjny ZS1 Goleniów</title>
     <style>
-        body { font-family: Arial, sans-serif; color: white; background: transparent; text-align: center; margin: 0; }
-        .box { padding: 20px; border-radius: 15px; background: rgba(0, 0, 0, 0.5); }
-        .label { font-size: 24px; text-transform: uppercase; }
-        .timer { font-size: 60px; font-weight: bold; color: #ff9900; }
+        :root {
+            --bg-dark: #121212;
+            --lesson-color: #ff4d4d; 
+            --break-color: #2ecc71;  
+            --after-color: #3498db;  
+            --text-main: #ffffff;
+            --accent-gold: #f1c40f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: transparent; 
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 40px;
+            border-radius: 30px;
+            border: 5px solid #333;
+            text-align: center;
+            width: 85%;
+            max-width: 900px;
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Klasy dynamiczne dla obramowania */
+        .state-lesson { border-color: var(--lesson-color); box-shadow: 0 0 30px rgba(255, 77, 77, 0.4); }
+        .state-break { border-color: var(--break-color); box-shadow: 0 0 30px rgba(46, 204, 113, 0.4); }
+        .state-after { border-color: var(--after-color); box-shadow: 0 0 30px rgba(52, 152, 219, 0.4); }
+
+        .school-header {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+
+        #current-time {
+            font-size: 110px;
+            font-weight: 800;
+            margin: 10px 0;
+            line-height: 1;
+        }
+
+        #status-label {
+            font-size: 32px;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+
+        #countdown {
+            font-size: 80px;
+            font-weight: bold;
+            margin: 5px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .vacation-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #vacation-timer {
+            font-size: 26px;
+            color: var(--accent-gold);
+            font-weight: bold;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="box">
-        <div id="label" class="label">Pobieranie danych...</div>
-        <div id="timer" class="timer">00:00</div>
+
+<div id="display-card" class="card">
+    <div class="school-header">
+        Zespół Szkół nr 1 w Goleniowie <br> Witamy
     </div>
 
-    <script>
-        // Tutaj wpisz godziny dzwonków Twojej szkoły
-        const schedule = [
-            { start: "08:00", end: "08:45", type: "Lekcja 1" },
-            { start: "08:45", end: "08:50", type: "Przerwa" },
-            { start: "08:50", end: "09:35", type: "Lekcja 2" },
-            { start: "09:35", end: "09:45", type: "Przerwa" },
-            { start: "09:45", end: "10:30", type: "Lekcja 3" },
-            { start: "10:30", end: "10:45", type: "Przerwa" },
-            { start: "10:45", end: "11:30", type: "Lekcja 4" },
-            { start: "11:30", end: "11:40", type: "Przerwa" },
-            { start: "11:40", end: "12:25", type: "Lekcja 5" },
-            { start: "12:25", end: "12:35", type: "Przerwa" },
-            { start: "12:35", end: "13:20", type: "Lekcja 6" },
-            { start: "13:20", end: "13:25", type: "Przerwa" },
-            { start: "13:25", end: "14:10", type: "Lekcja 7" },
-            { start: "14:10", end: "14:15", type: "Przerwa" },
-            { start: "14:15", end: "15:00", type: "Lekcja 8" },
-            
-        ];
+    <div id="current-time">00:00:00</div>
+    
+    <div id="status-label">Inicjalizacja...</div>
+    <div id="countdown">--:--</div>
 
-        function updateTimer() {
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            const currentSeconds = now.getSeconds();
+    <div class="vacation-section">
+        <div style="font-size: 18px; opacity: 0.7;">Do upragnionych wakacji pozostało:</div>
+        <div id="vacation-timer">obliczanie...</div>
+    </div>
+</div>
 
-            let found = false;
-            for (let item of schedule) {
-                const [hS, mS] = item.start.split(':').map(Number);
-                const [hE, mE] = item.end.split(':').map(Number);
-                const startInMin = hS * 60 + mS;
-                const endInMin = hE * 60 + mE;
+<script>
+    // --- KONFIGURACJA DZWONKÓW ---
+    const schedule = [
+        { start: "08:00", end: "08:45", name: "Lekcja 1" },
+        { start: "08:45", end: "08:50", name: "Przerwa" },
+        { start: "08:50", end: "09:35", name: "Lekcja 2" },
+        { start: "09:35", end: "09:45", name: "Przerwa" },
+        { start: "09:45", end: "10:30", name: "Lekcja 3" },
+        { start: "10:30", end: "10:45", name: "Przerwa" },
+        { start: "10:45", end: "11:30", name: "Lekcja 4" },
+        { start: "11:30", end: "11:40", name: "Przerwa" },
+        { start: "11:40", end: "12:25", name: "Lekcja 5" },
+        { start: "12:25", end: "12:35", name: "Przerwa" },
+        { start: "12:35", end: "13:20", name: "Lekcja 6" },
+        { start: "13:20", end: "13:25", name: "Przerwa" },
+        { start: "13:25", end: "14:10", name: "Lekcja 7" },
+        { start: "14:10", end: "14:15", name: "Przerwa" },
+        { start: "14:15", end: "15:00", name: "Lekcja 8" }
+    ];
 
-                if (currentTime >= startInMin && currentTime < endInMin) {
-                    const diffMin = endInMin - currentTime - 1;
-                    const diffSec = 60 - currentSeconds;
-                    document.getElementById('label').innerText = "Do końca: " + item.type;
-                    document.getElementById('timer').innerText = 
-                        `${String(diffMin).padStart(2, '0')}:${String(diffSec).padStart(2, '0')}`;
-                    found = true;
-                    break;
+    // DATA WAKACJI
+    const vacationDate = new Date("June 26, 2026 12:00:00").getTime();
+
+    function update() {
+        const now = new Date();
+        
+        // Zegar główny
+        document.getElementById('current-time').innerText = now.toLocaleTimeString('pl-PL');
+
+        // Logika lekcji/przerw
+        const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        let found = false;
+        const card = document.getElementById('display-card');
+
+        for (let item of schedule) {
+            const [hS, mS] = item.start.split(':').map(Number);
+            const [hE, mE] = item.end.split(':').map(Number);
+            const startSec = hS * 3600 + mS * 60;
+            const endSec = hE * 3600 + mE * 60;
+
+            if (nowSec >= startSec && nowSec < endSec) {
+                const diff = endSec - nowSec;
+                const m = Math.floor(diff / 60);
+                const s = diff % 60;
+                
+                document.getElementById('status-label').innerText = "Do końca: " + item.name;
+                document.getElementById('countdown').innerText = 
+                    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                
+                if (item.name.toLowerCase().includes("lekcja")) {
+                    card.className = "card state-lesson";
+                } else {
+                    card.className = "card state-break";
                 }
-            }
-            if (!found) {
-                document.getElementById('label').innerText = "Po lekcjach";
-                document.getElementById('timer').innerText = "--:--";
+                found = true;
+                break;
             }
         }
-        setInterval(updateTimer, 1000);
-    </script>
+
+        if (!found) {
+            document.getElementById('status-label').innerText = "Czas wolny / Po lekcjach";
+            document.getElementById('countdown').innerText = "DO DOMU!";
+            card.className = "card state-after";
+        }
+
+        // Licznik wakacji
+        const distance = vacationDate - now.getTime();
+        if (distance > 0) {
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            document.getElementById('vacation-timer').innerText = `${d} dni, ${h}h i ${m}m`;
+        } else {
+            document.getElementById('vacation-timer').innerText = "WAKACJE! 🎉";
+        }
+    }
+
+    setInterval(update, 1000);
+    update();
+</script>
+
 </body>
 </html>
