@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; color: white; background: transparent; text-align: center; margin: 0; }
+        .box { padding: 20px; border-radius: 15px; background: rgba(0, 0, 0, 0.5); }
+        .label { font-size: 24px; text-transform: uppercase; }
+        .timer { font-size: 60px; font-weight: bold; color: #ff9900; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div id="label" class="label">Pobieranie danych...</div>
+        <div id="timer" class="timer">00:00</div>
+    </div>
+
+    <script>
+        // Tutaj wpisz godziny dzwonków Twojej szkoły
+        const schedule = [
+            { start: "08:00", end: "08:45", type: "Lekcja 1" },
+            { start: "08:45", end: "08:50", type: "Przerwa" },
+            { start: "08:50", end: "09:35", type: "Lekcja 2" },
+            { start: "09:35", end: "09:45", type: "Przerwa" },
+            { start: "09:45", end: "10:30", type: "Lekcja 3" },
+            { start: "10:30", end: "10:45", type: "Przerwa" },
+            { start: "10:45", end: "11:30", type: "Lekcja 4" },
+            { start: "11:30", end: "11:40", type: "Przerwa" },
+            { start: "11:40", end: "12:25", type: "Lekcja 5" },
+            { start: "12:25", end: "12:35", type: "Przerwa" },
+            { start: "12:35", end: "13:20", type: "Lekcja 6" },
+            { start: "13:20", end: "13:25", type: "Przerwa" },
+            { start: "13:25", end: "14:10", type: "Lekcja 7" },
+            { start: "14:10", end: "14:15", type: "Przerwa" },
+            { start: "14:15", end: "15:00", type: "Lekcja 8" },
+            
+        ];
+
+        function updateTimer() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const currentSeconds = now.getSeconds();
+
+            let found = false;
+            for (let item of schedule) {
+                const [hS, mS] = item.start.split(':').map(Number);
+                const [hE, mE] = item.end.split(':').map(Number);
+                const startInMin = hS * 60 + mS;
+                const endInMin = hE * 60 + mE;
+
+                if (currentTime >= startInMin && currentTime < endInMin) {
+                    const diffMin = endInMin - currentTime - 1;
+                    const diffSec = 60 - currentSeconds;
+                    document.getElementById('label').innerText = "Do końca: " + item.type;
+                    document.getElementById('timer').innerText = 
+                        `${String(diffMin).padStart(2, '0')}:${String(diffSec).padStart(2, '0')}`;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                document.getElementById('label').innerText = "Po lekcjach";
+                document.getElementById('timer').innerText = "--:--";
+            }
+        }
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>
